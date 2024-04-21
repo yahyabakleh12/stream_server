@@ -1,21 +1,48 @@
-from flask import Flask, Response
-import threading
+from flask import Flask, Response, render_template_string
 import socket
 import cv2
 import numpy as np
+import threading
 
 app = Flask(__name__)
 
-# Buffer for the latest frame received from the socket server
+# Configuration for the socket server
+SERVER_HOST = '0.0.0.0'
+SERVER_PORT = 12345
 latest_frame = None
 frame_lock = threading.Lock()
 
-# Configuration for the socket server
-SERVER_HOST = '0.0.0.0'
-SERVER_PORT = 8446
+def recvall(sock, count):
+    """Ensure 'count' bytes are read."""
+    buf = b''
+    while count:
+        newbuf = sock.recv(count)
+        if not newbuf:
+            return None
+        buf += newbuf
+        count -= len(newbuf)
+    return buf
+
+def handle_client_connection(client_socket):
+    """Function to handle client connections and receive video frames."""
+    global latest_frame
+    try:
+        while True:
+            size_data = recvall(client_socket, 4)
+            if not size_data:
+                break
+            frame_size = int.from_bytes(size_data, 'big')
+            frame_data = recvall(client_socket, frame_size)
+            if not frame_data:
+                break
+
+            with frame_lock:
+                latest_frame = np.frombuffer(frame_data, dtype=np.uint8).reshape((480, 640, 3))
+    finally:
+        client_socket.close()
 
 def socket_server():
-    global latest_frame
+    """Background thread function for the socket server."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server_socket.bind((SERVER_HOST, SERVER_PORT))
@@ -24,42 +51,29 @@ def socket_server():
 
         while True:
             client_socket, _ = server_socket.accept()
-            with client_socket:
-                print("Client connected for video streaming.")
-                try:
-                    while True:
-                        # Example: Assuming the frame size is 640x480
-                        data = client_socket.recv(640 * 480 * 3)
-                        if not data:
-                            break
-                        # Convert the bytes to a numpy array and reshape to an image
-                        nparr = np.frombuffer(data, np.uint8)
-                        frame = nparr.reshape((640, 480, 3))
-                        with frame_lock:
-                            latest_frame = frame
-                except Exception as e:
-                    print(f"Error receiving data: {e}")
+            client_thread = threading.Thread(target=handle_client_connection, args=(client_socket,))
+            client_thread.daemon = True
+            client_thread.start()
 
-# @app.route('/video_feed')
-# def video_feed():
-#     """Route to stream the video feed."""
-#     def generate():
-#         global latest_frame
-#         while True:
-#             with frame_lock:
-#                 if latest_frame is not None:
-#                     # Encode the frame in JPEG format
-#                     ret, jpeg = cv2.imencode('.jpg', latest_frame)
-#                     if ret:
-#                         # Convert the frame to byte format
-#                         frame_data = jpeg.tobytes()
-#                         yield (b'--frame\r\n'
-#                                b'Content-Type: image/jpeg\r\n\r\n' + frame_data + b'\r\n')
-#     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
+@app.route('/')
+def index():
+    """Serve a simple webpage to view the video stream."""
+    return render_template_string('''<html><body><img src="{{ url_for('video_feed') }}"></body></html>''')
+
+@app.route('/video_feed')
+def video_feed():
+    """Route to stream the latest video frame."""
+    def generate():
+        while True:
+            with frame_lock:
+                if latest_frame is not None:
+                    ret, jpeg = cv2.imencode('.jpg', latest_frame)
+                    if ret:
+                        frame_data = jpeg.tobytes()
+                        yield (b'--frame\r\n'
+                               b'Content-Type: image/jpeg\r\n\r\n' + frame_data + b'\r\n')
+    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
-    socket_server()
-    # Start the socket server in a background thread
-    # threading.Thread(target=socket_server, daemon=True).start()
-    # Run the Flask application
-    # app.run(debug=True, host='0.0.0.0', port=5000)
+    threading.Thread(target=socket_server, daemon=True).start()
+    app.run(debug=True, host='0.0.0.0', port=5000)
