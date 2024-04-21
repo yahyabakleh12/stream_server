@@ -3,6 +3,7 @@ import socket
 import cv2
 import numpy as np
 import threading
+import time
 
 app = Flask(__name__)
 
@@ -79,4 +80,5 @@ def video_feed():
 if __name__ == '__main__':
     # socket_server()
     threading.Thread(target=socket_server, daemon=True).start()
+    time.sleep(5)
     app.run(debug=True, host='0.0.0.0', port=5000)
