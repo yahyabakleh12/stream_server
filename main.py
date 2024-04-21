@@ -47,7 +47,6 @@ def handle_client_connection(client_socket):
 def socket_server():
     """Background thread function for the socket server."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-        server_socket.TCPServer.allow_reuse_address = True
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server_socket.bind((SERVER_HOST, SERVER_PORT))
         server_socket.listen()
@@ -82,4 +81,4 @@ if __name__ == '__main__':
     # socket_server()
     threading.Thread(target=socket_server, daemon=True).start()
     time.sleep(5)
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='172.31.5.34', port=5000)
