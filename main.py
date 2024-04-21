@@ -12,7 +12,7 @@ frame_lock = threading.Lock()
 
 # Configuration for the socket server
 SERVER_HOST = '0.0.0.0'
-SERVER_PORT = 87756
+SERVER_PORT = 8446
 
 def socket_server():
     global latest_frame
