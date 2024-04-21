@@ -61,4 +61,4 @@ if __name__ == '__main__':
     # Start the socket server in a background thread
     threading.Thread(target=socket_server, daemon=True).start()
     # Run the Flask application
-    app.run(debug=True, host='0.0.0.0', port=5005)
+    app.run(debug=True, host='0.0.0.0', port=5000)
