@@ -7,7 +7,7 @@ import threading
 app = Flask(__name__)
 
 # Configuration for the socket server
-SERVER_HOST = '0.0.0.0'
+SERVER_HOST = '172.31.5.34'
 SERVER_PORT = 8446
 latest_frame = None
 frame_lock = threading.Lock()
