@@ -35,9 +35,11 @@ def handle_client_connection(client_socket):
             frame_data = recvall(client_socket, frame_size)
             if not frame_data:
                 break
-
-            with frame_lock:
-                latest_frame = np.frombuffer(frame_data, dtype=np.uint8).reshape((480, 640, -1))
+            nparr = np.frombuffer(frame_data, np.uint8)
+            decoded_frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            if decoded_frame is not None:
+                with frame_lock:
+                    latest_frame = decoded_frame
     finally:
         client_socket.close()
 
