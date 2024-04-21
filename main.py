@@ -47,6 +47,7 @@ def handle_client_connection(client_socket):
 def socket_server():
     """Background thread function for the socket server."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
+        server_socket.TCPServer.allow_reuse_address = True
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server_socket.bind((SERVER_HOST, SERVER_PORT))
         server_socket.listen()
