@@ -11,7 +11,7 @@ latest_frame = None
 frame_lock = threading.Lock()
 
 # Configuration for the socket server
-SERVER_HOST = '172.31.5.34'
+SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 8446
 
 def socket_server():
@@ -34,7 +34,7 @@ def socket_server():
                             break
                         # Convert the bytes to a numpy array and reshape to an image
                         nparr = np.frombuffer(data, np.uint8)
-                        frame = nparr.reshape((480, 640, 3))
+                        frame = nparr.reshape((640, 480, 3))
                         with frame_lock:
                             latest_frame = frame
                 except Exception as e:
