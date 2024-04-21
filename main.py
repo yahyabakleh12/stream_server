@@ -40,25 +40,26 @@ def socket_server():
                 except Exception as e:
                     print(f"Error receiving data: {e}")
 
-@app.route('/video_feed')
-def video_feed():
-    """Route to stream the video feed."""
-    def generate():
-        global latest_frame
-        while True:
-            with frame_lock:
-                if latest_frame is not None:
-                    # Encode the frame in JPEG format
-                    ret, jpeg = cv2.imencode('.jpg', latest_frame)
-                    if ret:
-                        # Convert the frame to byte format
-                        frame_data = jpeg.tobytes()
-                        yield (b'--frame\r\n'
-                               b'Content-Type: image/jpeg\r\n\r\n' + frame_data + b'\r\n')
-    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
+# @app.route('/video_feed')
+# def video_feed():
+#     """Route to stream the video feed."""
+#     def generate():
+#         global latest_frame
+#         while True:
+#             with frame_lock:
+#                 if latest_frame is not None:
+#                     # Encode the frame in JPEG format
+#                     ret, jpeg = cv2.imencode('.jpg', latest_frame)
+#                     if ret:
+#                         # Convert the frame to byte format
+#                         frame_data = jpeg.tobytes()
+#                         yield (b'--frame\r\n'
+#                                b'Content-Type: image/jpeg\r\n\r\n' + frame_data + b'\r\n')
+#     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
+    socket_server()
     # Start the socket server in a background thread
-    threading.Thread(target=socket_server, daemon=True).start()
+    # threading.Thread(target=socket_server, daemon=True).start()
     # Run the Flask application
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # app.run(debug=True, host='0.0.0.0', port=5000)
