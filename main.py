@@ -75,5 +75,6 @@ def video_feed():
     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
-    threading.Thread(target=socket_server, daemon=True).start()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    socket_server()
+    # threading.Thread(target=socket_server, daemon=True).start()
+    # app.run(debug=True, host='0.0.0.0', port=5000)
