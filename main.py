@@ -8,7 +8,7 @@ import time
 app = Flask(__name__)
 
 # Configuration for the socket server
-SERVER_HOST = '172.31.5.34'
+SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 8446
 latest_frame = None
 frame_lock = threading.Lock()
@@ -81,4 +81,4 @@ if __name__ == '__main__':
     # socket_server()
     threading.Thread(target=socket_server, daemon=True).start()
     time.sleep(5)
-    app.run(debug=True, host='172.31.5.34', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)
